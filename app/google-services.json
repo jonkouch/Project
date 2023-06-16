@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "259849047586",
+    "project_id": "iot-final-project-302d8",
+    "storage_bucket": "iot-final-project-302d8.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:259849047586:android:eaedfcc49a161a5600447b",
+        "android_client_info": {
+          "package_name": "com.example.tutorial6"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "259849047586-bo0okls2n00ucqjs3fl0vclf0nr9qsmk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBUnQu85E0d8LGNnQCy8ImwR4FA7M_SKqg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "259849047586-bo0okls2n00ucqjs3fl0vclf0nr9qsmk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

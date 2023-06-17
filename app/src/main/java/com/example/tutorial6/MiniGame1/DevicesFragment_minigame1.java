@@ -110,7 +110,7 @@ public class DevicesFragment_minigame1 extends ListFragment {
         BluetoothDevice device = listItems.get(position-1);
         Bundle args = new Bundle();
         args.putString("device", device.getAddress());
-        Fragment fragment = new TerminalFragment_minigame1();
+        Fragment fragment = new StartGame_fragment();
         fragment.setArguments(args);
         getFragmentManager().beginTransaction().replace(R.id.fragment, fragment, "terminal").addToBackStack(null).commit();
     }

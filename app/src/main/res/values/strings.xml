@@ -1,9 +1,11 @@
 <resources>
     <string name="app_name">tutorial6</string>
-    <string name="devices">Bluetooth Devices</string>
+    <string name="devices">Please choose "Game Bluetooth" to continue</string>
 
     <string-array name="activity_options">
         <item>Walking</item>
         <item>Running</item>
     </string-array>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

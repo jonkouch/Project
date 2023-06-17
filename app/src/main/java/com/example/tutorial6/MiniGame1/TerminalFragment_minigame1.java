@@ -36,6 +36,10 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
+import com.chaquo.python.PyObject;
+import com.chaquo.python.Python;
+import com.chaquo.python.android.AndroidPlatform;
+import com.example.tutorial6.MiniGame1.LoadCSV_minigame1;
 import com.example.tutorial6.R;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.Entry;
@@ -79,12 +83,14 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
     String activityType;
     String csvName;
     String stepNumber;
+    String estimatedSteps;
     int chartIndex;
     boolean start_flag=false;
     DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
     boolean firstReceive = true;
     boolean no_action_flag = true;
     boolean stopped = false;
+    View view;
 
     float startTime;
     String directoryPath = "/sdcard/csv_dir/";
@@ -98,6 +104,7 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
     String row4[];
     String row5[];
     String row6[];
+    String row7[];
     ArrayList<String[]> csv_data;
 
     /*
@@ -177,7 +184,7 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
      */
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_terminal_minigame1, container, false);
+        view = inflater.inflate(R.layout.fragment_terminal_minigame1, container, false);
         receiveText = view.findViewById(R.id.receive_text);                          // TextView performance decreases with number of spans
         receiveText.setTextColor(getResources().getColor(R.color.colorRecieveText)); // set as default color to reduce number of spans
         receiveText.setMovementMethod(ScrollingMovementMethod.getInstance());
@@ -234,7 +241,6 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
                 csvName = textButton.getText().toString();
                 stepNumber = stepsButton.getText().toString();
 
-
                 if(!no_action_flag){
                     Toast.makeText(service.getApplicationContext(), "You cannot start a recording before saving or deleting the previous one!", Toast.LENGTH_SHORT).show();
                 }
@@ -256,8 +262,8 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
                     row2 = new String[]{"EXPERIMENT TIME:", (String) dtf.format(LocalDateTime.now())};
                     row3 = new String[]{"ACTIVITY TYPE:", activityType};
                     row4 = new String[]{"COUNT OF ACTUAL STEPS:", stepNumber};
-                    row5 = new String[]{};
-                    row6 = new String[]{"Time[sec]", "ACC X", "ACC Y", "ACC Z"};
+                    row6 = new String[]{"Time[sec]", "Acceleration"};
+                    row7 = new String[]{};
 
                     start_flag = true;
                     chartIndex = 0;
@@ -278,6 +284,7 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
                 }
                 else {
                     start_flag = false;
+                    stopped = false;
                     no_action_flag = true;
                     csv_data.clear();
                     filenames.remove(csvName+".csv");
@@ -287,12 +294,12 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
                     data.getDataSetByIndex(0);
                     while (set.removeLast()) {
                     }
-                    set = data.getDataSetByIndex(1);
-                    while (set.removeLast()) {
-                    }
-                    set = data.getDataSetByIndex(2);
-                    while (set.removeLast()) {
-                    }
+//                    set = data.getDataSetByIndex(1);
+//                    while (set.removeLast()) {
+//                    }
+//                    set = data.getDataSetByIndex(2);
+//                    while (set.removeLast()) {
+//                    }
                 }
             }
         });
@@ -302,9 +309,22 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
             public void onClick(View v) {
                 if(no_action_flag)
                     Toast.makeText(service.getApplicationContext(), "What are you trying to stop?", Toast.LENGTH_SHORT).show();
+                else if(stopped){
+                    Toast.makeText(service.getApplicationContext(), "Already stopped", Toast.LENGTH_SHORT).show();
+                }
                 else {
                     start_flag = false;
                     stopped = true;
+
+                    if (! Python.isStarted()){
+                        Python.start(new AndroidPlatform(getContext()));
+                    }
+                    Python py = Python.getInstance();
+                    PyObject pyobj = py.getModule("steps");
+
+                    PyObject obj= pyobj.callAttr("reset");
+                    TextView num_of_steps_predicted = (TextView) view.findViewById(R.id.num_of_steps_predicted);
+                    num_of_steps_predicted.setText("number of steps : 0");
                 }
             }
         });
@@ -328,6 +348,7 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
                     String csv = "/sdcard/csv_dir/" + csvName + ".csv";
                     CSVWriter csvWriter = null;
 
+                    row5 = new String[]{"ESTIMATED NUMBER OF STEPS:", estimatedSteps};
                     try {
                         csvWriter = new CSVWriter(new FileWriter(csv, true));
                         csvWriter.writeNext(row1);
@@ -336,6 +357,7 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
                         csvWriter.writeNext(row4);
                         csvWriter.writeNext(row5);
                         csvWriter.writeNext(row6);
+                        csvWriter.writeNext(row7);
 
                         for (String[] row: csv_data) {
                             csvWriter.writeNext(row);
@@ -349,12 +371,12 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
                         data.getDataSetByIndex(0);
                         while (set.removeLast()) {
                         }
-                        set = data.getDataSetByIndex(1);
-                        while (set.removeLast()) {
-                        }
-                        set = data.getDataSetByIndex(2);
-                        while (set.removeLast()) {
-                        }
+//                        set = data.getDataSetByIndex(1);
+//                        while (set.removeLast()) {
+//                        }
+//                        set = data.getDataSetByIndex(2);
+//                        while (set.removeLast()) {
+//                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -363,17 +385,17 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
         });
 
         mpLineChart = (LineChart) view.findViewById(R.id.line_chart);
-        lineDataSet1 =  new LineDataSet(emptyDataValues(), "x-axis ACC");
-        lineDataSet2 =  new LineDataSet(emptyDataValues(), "y-axis ACC");
-        lineDataSet3 =  new LineDataSet(emptyDataValues(), "z-axis ACC");
+        lineDataSet1 =  new LineDataSet(emptyDataValues(), "Acceleration");
+//        lineDataSet2 =  new LineDataSet(emptyDataValues(), "y-axis ACC");
+//        lineDataSet3 =  new LineDataSet(emptyDataValues(), "z-axis ACC");
 
         lineDataSet1.setColor(Color.BLUE);
-        lineDataSet2.setColor(Color.RED);
-        lineDataSet2.setColor(Color.GREEN);
+//        lineDataSet2.setColor(Color.RED);
+//        lineDataSet2.setColor(Color.GREEN);
 
         dataSets.add(lineDataSet1);
-        dataSets.add(lineDataSet2);
-        dataSets.add(lineDataSet3);
+//        dataSets.add(lineDataSet2);
+//        dataSets.add(lineDataSet3);
 
         data = new LineData(dataSets);
         mpLineChart.setData(data);
@@ -392,10 +414,10 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
                 ILineDataSet set = data.getDataSetByIndex(0);
                 data.getDataSetByIndex(0);
                 while(set.removeLast()){}
-                set = data.getDataSetByIndex(1);
-                while(set.removeLast()){}
-                set = data.getDataSetByIndex(2);
-                while(set.removeLast()){}
+//                set = data.getDataSetByIndex(1);
+//                while(set.removeLast()){}
+//                set = data.getDataSetByIndex(2);
+//                while(set.removeLast()){}
             }
         });
 
@@ -450,8 +472,8 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
      * Serial + UI
      */
     private String[] clean_str(String[] stringsArr){
-         for (int i = 0; i < stringsArr.length; i++)  {
-             stringsArr[i]=stringsArr[i].replaceAll(" ","");
+        for (int i = 0; i < stringsArr.length; i++)  {
+            stringsArr[i]=stringsArr[i].replaceAll(" ","");
         }
 
 
@@ -518,6 +540,8 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
                         String[] parts = msg_to_save.split(",");
                         // function to trim blank spaces
                         parts = clean_str(parts);
+                        float N = (float) Math.sqrt(Math.pow(Float.parseFloat(parts[0]), 2) + Math.pow(Float.parseFloat(parts[1]), 2) + Math.pow(Float.parseFloat(parts[2]), 2));
+
 
                         // parse string values, in this case [0] is tmp & [1] is count (t)
                         String row[];
@@ -532,17 +556,32 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
                         csv_data.add(row);
 
                         // add received values to line dataset for plotting the linechart
-                        data.addEntry(new Entry(chartIndex, Float.parseFloat(parts[0])), 0);
+                        data.addEntry(new Entry(chartIndex, N), 0);
                         lineDataSet1.notifyDataSetChanged(); // let the data know a dataSet changed
-                        data.addEntry(new Entry(chartIndex, Float.parseFloat(parts[1])), 1);
-                        lineDataSet1.notifyDataSetChanged(); // let the data know a dataSet changed
-                        data.addEntry(new Entry(chartIndex, Float.parseFloat(parts[2])), 2);
-                        lineDataSet1.notifyDataSetChanged(); // let the data know a dataSet changed
-                        lineDataSet2.notifyDataSetChanged(); // let the data know a dataSet changed
-                        lineDataSet3.notifyDataSetChanged(); // let the data know a dataSet changed
+//                        data.addEntry(new Entry(chartIndex, Float.parseFloat(parts[1])), 1);
+//                        lineDataSet1.notifyDataSetChanged(); // let the data know a dataSet changed
+//                        data.addEntry(new Entry(chartIndex, Float.parseFloat(parts[2])), 2);
+//                        lineDataSet1.notifyDataSetChanged(); // let the data know a dataSet changed
+//                        lineDataSet2.notifyDataSetChanged(); // let the data know a dataSet changed
+//                        lineDataSet3.notifyDataSetChanged(); // let the data know a dataSet changed
                         mpLineChart.notifyDataSetChanged(); // let the chart know it's data changed
                         mpLineChart.invalidate(); // refresh
                         chartIndex++;
+
+
+                        TextView num_of_steps_predicted = (TextView) view.findViewById(R.id.num_of_steps_predicted);
+
+
+
+                        if (! Python.isStarted()){
+                            Python.start(new AndroidPlatform(getContext()));
+                        }
+                        Python py = Python.getInstance();
+                        PyObject pyobj = py.getModule("steps");
+                        PyObject obj= pyobj.callAttr("step_count", N);
+                        num_of_steps_predicted.setText("number of steps : " + obj.toString());
+                        estimatedSteps = obj.toString();
+
                     }
 
                     msg = msg.replace(TextUtil_minigame1.newline_crlf, TextUtil_minigame1.newline_lf);
@@ -584,7 +623,7 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
     @Override
     public void onSerialRead(byte[] data) {
         try {
-        receive(data);}
+            receive(data);}
         catch (Exception e) {
             e.printStackTrace();
         }
@@ -606,5 +645,4 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
         Intent intent = new Intent(getContext(), LoadCSV_minigame1.class);
         startActivity(intent);
     }
-
 }

@@ -211,22 +211,6 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
             }
         }
 
-        Spinner spinner = view.findViewById(R.id.spinner2);
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getActivity(), R.array.activity_options, android.R.layout.simple_spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner.setAdapter(adapter);
-
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                activityType = parent.getItemAtPosition(position).toString();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                // Handle the case when no item is selected
-            }
-        });
 
         EditText textButton = view.findViewById(R.id.csv_name);
         EditText stepsButton = (EditText) view.findViewById(R.id.step_number);
@@ -294,12 +278,6 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
                     data.getDataSetByIndex(0);
                     while (set.removeLast()) {
                     }
-//                    set = data.getDataSetByIndex(1);
-//                    while (set.removeLast()) {
-//                    }
-//                    set = data.getDataSetByIndex(2);
-//                    while (set.removeLast()) {
-//                    }
                 }
             }
         });
@@ -329,73 +307,13 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
             }
         });
 
-        Button save = view.findViewById(R.id.save_btn);
-        save.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                if(no_action_flag) {
-                    Toast.makeText(service.getApplicationContext(), "No data to save yet", Toast.LENGTH_SHORT).show();
-                }
-                else if(!stopped) {
-                    Toast.makeText(service.getApplicationContext(), "Recording must be stopped before saving", Toast.LENGTH_SHORT).show();
-                }
-                else {
-                    start_flag = false;
-                    no_action_flag = true;
-                    stopped = false;
-
-                    File file = new File("/sdcard/csv_dir/");
-                    file.mkdirs();
-                    String csv = "/sdcard/csv_dir/" + csvName + ".csv";
-                    CSVWriter csvWriter = null;
-
-                    row5 = new String[]{"ESTIMATED NUMBER OF STEPS:", estimatedSteps};
-                    try {
-                        csvWriter = new CSVWriter(new FileWriter(csv, true));
-                        csvWriter.writeNext(row1);
-                        csvWriter.writeNext(row2);
-                        csvWriter.writeNext(row3);
-                        csvWriter.writeNext(row4);
-                        csvWriter.writeNext(row5);
-                        csvWriter.writeNext(row6);
-                        csvWriter.writeNext(row7);
-
-                        for (String[] row: csv_data) {
-                            csvWriter.writeNext(row);
-                        }
-
-                        csvWriter.close();
-                        chartIndex = 0;
-
-                        LineData data = mpLineChart.getData();
-                        ILineDataSet set = data.getDataSetByIndex(0);
-                        data.getDataSetByIndex(0);
-                        while (set.removeLast()) {
-                        }
-//                        set = data.getDataSetByIndex(1);
-//                        while (set.removeLast()) {
-//                        }
-//                        set = data.getDataSetByIndex(2);
-//                        while (set.removeLast()) {
-//                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        });
 
         mpLineChart = (LineChart) view.findViewById(R.id.line_chart);
         lineDataSet1 =  new LineDataSet(emptyDataValues(), "Acceleration");
-//        lineDataSet2 =  new LineDataSet(emptyDataValues(), "y-axis ACC");
-//        lineDataSet3 =  new LineDataSet(emptyDataValues(), "z-axis ACC");
 
         lineDataSet1.setColor(Color.BLUE);
-//        lineDataSet2.setColor(Color.RED);
-//        lineDataSet2.setColor(Color.GREEN);
 
         dataSets.add(lineDataSet1);
-//        dataSets.add(lineDataSet2);
-//        dataSets.add(lineDataSet3);
 
         data = new LineData(dataSets);
         mpLineChart.setData(data);
@@ -414,20 +332,10 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
                 ILineDataSet set = data.getDataSetByIndex(0);
                 data.getDataSetByIndex(0);
                 while(set.removeLast()){}
-//                set = data.getDataSetByIndex(1);
-//                while(set.removeLast()){}
-//                set = data.getDataSetByIndex(2);
-//                while(set.removeLast()){}
             }
         });
 
-        buttonCsvShow.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                OpenLoadCSV();
 
-            }
-        });
 
         return view;
     }
@@ -558,12 +466,6 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
                         // add received values to line dataset for plotting the linechart
                         data.addEntry(new Entry(chartIndex, N), 0);
                         lineDataSet1.notifyDataSetChanged(); // let the data know a dataSet changed
-//                        data.addEntry(new Entry(chartIndex, Float.parseFloat(parts[1])), 1);
-//                        lineDataSet1.notifyDataSetChanged(); // let the data know a dataSet changed
-//                        data.addEntry(new Entry(chartIndex, Float.parseFloat(parts[2])), 2);
-//                        lineDataSet1.notifyDataSetChanged(); // let the data know a dataSet changed
-//                        lineDataSet2.notifyDataSetChanged(); // let the data know a dataSet changed
-//                        lineDataSet3.notifyDataSetChanged(); // let the data know a dataSet changed
                         mpLineChart.notifyDataSetChanged(); // let the chart know it's data changed
                         mpLineChart.invalidate(); // refresh
                         chartIndex++;
@@ -579,7 +481,7 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
                         Python py = Python.getInstance();
                         PyObject pyobj = py.getModule("steps");
                         PyObject obj= pyobj.callAttr("step_count", N);
-                        num_of_steps_predicted.setText("number of steps : " + obj.toString());
+                        num_of_steps_predicted.setText("Top acceleration hit : " + obj.toString());
                         estimatedSteps = obj.toString();
 
                     }
@@ -640,10 +542,4 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
         ArrayList<Entry> dataVals = new ArrayList<Entry>();
         return dataVals;
     }
-
-    private void OpenLoadCSV(){
-        Intent intent = new Intent(getContext(), LoadCSV_minigame2.class);
-        startActivity(intent);
-    }
-
 }

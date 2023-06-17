@@ -26,7 +26,17 @@
             android:layout_width="wrap_content"
             android:layout_height="134dp"
             android:layout_weight="1"
-            android:text="number of steps : 0" />
+            android:text="Top acceleration hit : 0"
+            android:textColor="#FFFFFF"
+            android:textSize="25sp"
+            android:fontFamily="sans-serif-light"
+            android:shadowColor="#000000"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="2"
+            android:padding="4dp"
+            android:background="#7E00BCD4"
+            android:layout_marginTop="8dp" />
 
 
 
@@ -46,13 +56,6 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="30dp"
             android:text="Clear" />
-
-        <Button
-            android:id="@+id/button2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="open CSV" />
-
 
 
     </LinearLayout>
@@ -80,12 +83,6 @@
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="70dp"
         android:orientation="horizontal">
-
-        <Spinner
-            android:id="@+id/spinner2"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="1" />
 
 
     </LinearLayout>
@@ -135,13 +132,6 @@
         android:layout_marginHorizontal="70dp"
         android:orientation="horizontal">
 
-
-        <Button
-            android:id="@+id/save_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Save" />
 
         <Button
             android:id="@+id/reset_btn"

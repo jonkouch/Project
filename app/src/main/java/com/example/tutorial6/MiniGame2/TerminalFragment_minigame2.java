@@ -11,6 +11,7 @@ import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.text.Editable;
 import android.text.Spannable;
@@ -59,7 +60,9 @@ import java.util.List;
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class TerminalFragment_minigame2 extends Fragment implements ServiceConnection, SerialListener_minigame2 {
 
-    private enum Connected { False, Pending, True }
+    private enum Connected {False, Pending, True}
+
+    private static final long COUNTDOWN_DURATION = 7000; // 5 seconds
 
     private String deviceAddress;
     private SerialService_minigame2 service;
@@ -83,9 +86,10 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
     String stepNumber;
     String estimatedSteps;
     int chartIndex;
-    boolean start_flag=false;
+    boolean start_flag = false;
     DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
     boolean firstReceive = true;
+    boolean timeFlag = true;
     boolean no_action_flag = true;
     View view;
 
@@ -112,7 +116,7 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
     @Override
     public void onStart() {
         super.onStart();
-        if(service != null)
+        if (service != null)
             service.attach(this);
         else
             getActivity().startService(new Intent(getActivity(), SerialService_minigame2.class)); // prevents service destroy on unbind from recreated activity caused by orientation change
@@ -120,12 +124,13 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
 
     @Override
     public void onStop() {
-        if(service != null && !getActivity().isChangingConfigurations())
+        if (service != null && !getActivity().isChangingConfigurations())
             service.detach();
         super.onStop();
     }
 
-    @SuppressWarnings("deprecation") // onAttach(context) was added with API 23. onAttach(activity) works for all API versions
+    @SuppressWarnings("deprecation")
+    // onAttach(context) was added with API 23. onAttach(activity) works for all API versions
     @Override
     public void onAttach(@NonNull Activity activity) {
         super.onAttach(activity);
@@ -134,14 +139,17 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
 
     @Override
     public void onDetach() {
-        try { getActivity().unbindService(this); } catch(Exception ignored) {}
+        try {
+            getActivity().unbindService(this);
+        } catch (Exception ignored) {
+        }
         super.onDetach();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        if(initialStart && service != null) {
+        if (initialStart && service != null) {
             initialStart = false;
             getActivity().runOnUiThread(this::connect);
         }
@@ -151,7 +159,7 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
     public void onServiceConnected(ComponentName name, IBinder binder) {
         service = ((SerialService_minigame2.SerialBinder) binder).getService();
         service.attach(this);
-        if(initialStart && isResumed()) {
+        if (initialStart && isResumed()) {
             initialStart = false;
             getActivity().runOnUiThread(this::connect);
         }
@@ -196,7 +204,7 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
 
 
         mpLineChart = (LineChart) view.findViewById(R.id.line_chart);
-        lineDataSet1 =  new LineDataSet(emptyDataValues(), "Acceleration");
+        lineDataSet1 = new LineDataSet(emptyDataValues(), "Acceleration");
 
         lineDataSet1.setColor(Color.BLUE);
 
@@ -205,7 +213,6 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
         data = new LineData(dataSets);
         mpLineChart.setData(data);
         mpLineChart.invalidate();
-
 
 
         return view;
@@ -250,14 +257,15 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
     /*
      * Serial + UI
      */
-    private String[] clean_str(String[] stringsArr){
-        for (int i = 0; i < stringsArr.length; i++)  {
-            stringsArr[i]=stringsArr[i].replaceAll(" ","");
+    private String[] clean_str(String[] stringsArr) {
+        for (int i = 0; i < stringsArr.length; i++) {
+            stringsArr[i] = stringsArr[i].replaceAll(" ", "");
         }
 
 
         return stringsArr;
     }
+
     private void connect() {
         try {
             BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -277,14 +285,14 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
     }
 
     private void send(String str) {
-        if(connected != Connected.True) {
+        if (connected != Connected.True) {
             Toast.makeText(getActivity(), "not connected", Toast.LENGTH_SHORT).show();
             return;
         }
         try {
             String msg;
             byte[] data;
-            if(hexEnabled) {
+            if (hexEnabled) {
                 StringBuilder sb = new StringBuilder();
                 TextUtil_minigame2.toHexString(sb, TextUtil_minigame2.fromHexString(str));
                 TextUtil_minigame2.toHexString(sb, newline.getBytes());
@@ -303,62 +311,79 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
         }
     }
 
-    private void receive(byte[] message) {
-        if (hexEnabled) {
-            receiveText.append(TextUtil_minigame2.toHexString(message) + '\n');
-        } else {
-            String msg = new String(message);
-            if (newline.equals(TextUtil_minigame2.newline_crlf) && msg.length() > 0) {
-                // don't show CR as ^M if directly before LF
-                String msg_to_save = msg;
-                msg_to_save = msg.replace(TextUtil_minigame2.newline_crlf, TextUtil_minigame2.emptyString);
-                // check message length
-                if (msg_to_save.length() > 1) {
-                    // split message string by ',' char
-                    String[] parts = msg_to_save.split(",");
-                    // function to trim blank spaces
-                    parts = clean_str(parts);
-                    float N = (float) Math.sqrt(Math.pow(Float.parseFloat(parts[0]), 2) + Math.pow(Float.parseFloat(parts[1]), 2) + Math.pow(Float.parseFloat(parts[2]), 2));
+    private void startCountdown() {
+        new CountDownTimer(COUNTDOWN_DURATION, 1000) {
 
+            @Override
+            public void onTick(long millisUntilFinished) {
 
-                    // parse string values, in this case [0] is tmp & [1] is count (t)
-                    String row[];
-                    if (firstReceive){
-                        firstReceive = false;
-                    }
-
-                    // add received values to line dataset for plotting the linechart
-                    data.addEntry(new Entry(chartIndex, N), 0);
-                    lineDataSet1.notifyDataSetChanged(); // let the data know a dataSet changed
-                    mpLineChart.notifyDataSetChanged(); // let the chart know it's data changed
-                    mpLineChart.invalidate(); // refresh
-                    chartIndex++;
-
-
-                    TextView num_of_steps_predicted = (TextView) view.findViewById(R.id.num_of_steps_predicted);
-
-                    if (! Python.isStarted()){
-                        Python.start(new AndroidPlatform(getContext()));
-                    }
-                    Python py = Python.getInstance();
-                    PyObject pyobj = py.getModule("steps");
-                    PyObject obj= pyobj.callAttr("max_acc", N);
-                    num_of_steps_predicted.setText("Top acceleration hit : " + obj.toString());
-                    estimatedSteps = obj.toString();
-
-                }
-
-                msg = msg.replace(TextUtil_minigame2.newline_crlf, TextUtil_minigame2.newline_lf);
-                // send msg to function that saves it to csv
-                // special handling if CR and LF come in separate fragments
-                if (pendingNewline && msg.charAt(0) == '\n') {
-                    Editable edt = receiveText.getEditableText();
-                    if (edt != null && edt.length() > 1)
-                        edt.replace(edt.length() - 2, edt.length(), "");
-                }
-                pendingNewline = msg.charAt(msg.length() - 1) == '\r';
             }
-            receiveText.append(TextUtil_minigame2.toCaretString(msg, newline.length() != 0));
+
+            @Override
+            public void onFinish() {
+                timeFlag = false;
+            }
+        }.start();
+    }
+
+    private void receive(byte[] message) {
+        if (timeFlag) {
+            if (hexEnabled) {
+                receiveText.append(TextUtil_minigame2.toHexString(message) + '\n');
+            } else {
+                String msg = new String(message);
+                if (newline.equals(TextUtil_minigame2.newline_crlf) && msg.length() > 0) {
+                    // don't show CR as ^M if directly before LF
+                    String msg_to_save = msg;
+                    msg_to_save = msg.replace(TextUtil_minigame2.newline_crlf, TextUtil_minigame2.emptyString);
+                    // check message length
+                    if (msg_to_save.length() > 1) {
+                        // split message string by ',' char
+                        String[] parts = msg_to_save.split(",");
+                        // function to trim blank spaces
+                        parts = clean_str(parts);
+                        float N = (float) Math.sqrt(Math.pow(Float.parseFloat(parts[0]), 2) + Math.pow(Float.parseFloat(parts[1]), 2) + Math.pow(Float.parseFloat(parts[2]), 2));
+
+
+                        // parse string values, in this case [0] is tmp & [1] is count (t)
+                        String row[];
+                        if (firstReceive) {
+                            firstReceive = false;
+                        }
+
+                        // add received values to line dataset for plotting the linechart
+                        data.addEntry(new Entry(chartIndex, N), 0);
+                        lineDataSet1.notifyDataSetChanged(); // let the data know a dataSet changed
+                        mpLineChart.notifyDataSetChanged(); // let the chart know it's data changed
+                        mpLineChart.invalidate(); // refresh
+                        chartIndex++;
+
+
+                        TextView num_of_steps_predicted = (TextView) view.findViewById(R.id.num_of_steps_predicted);
+
+                        if (!Python.isStarted()) {
+                            Python.start(new AndroidPlatform(getContext()));
+                        }
+                        Python py = Python.getInstance();
+                        PyObject pyobj = py.getModule("steps");
+                        PyObject obj = pyobj.callAttr("max_acc", N);
+                        num_of_steps_predicted.setText("Top acceleration hit : " + obj.toString());
+                        estimatedSteps = obj.toString();
+
+                    }
+
+                    msg = msg.replace(TextUtil_minigame2.newline_crlf, TextUtil_minigame2.newline_lf);
+                    // send msg to function that saves it to csv
+                    // special handling if CR and LF come in separate fragments
+                    if (pendingNewline && msg.charAt(0) == '\n') {
+                        Editable edt = receiveText.getEditableText();
+                        if (edt != null && edt.length() > 1)
+                            edt.replace(edt.length() - 2, edt.length(), "");
+                    }
+                    pendingNewline = msg.charAt(msg.length() - 1) == '\r';
+                }
+                receiveText.append(TextUtil_minigame2.toCaretString(msg, newline.length() != 0));
+            }
         }
     }
 
@@ -375,6 +400,7 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
     public void onSerialConnect() {
         status("connected");
         connected = Connected.True;
+        startCountdown();
     }
 
     @Override
@@ -386,8 +412,8 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
     @Override
     public void onSerialRead(byte[] data) {
         try {
-            receive(data);}
-        catch (Exception e) {
+            receive(data);
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -398,8 +424,7 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
         disconnect();
     }
 
-    private ArrayList<Entry> emptyDataValues()
-    {
+    private ArrayList<Entry> emptyDataValues() {
         ArrayList<Entry> dataVals = new ArrayList<Entry>();
         return dataVals;
     }

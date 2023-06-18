@@ -14,6 +14,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity
+            android:name=".minigame2_leaderboard"
+            android:exported="false" />
+        <activity
+            android:name=".minigame1_leaderboard"
+            android:exported="false" />
         <activity android:name=".MiniGame1.LoadCSV_minigame1">
 
             <!-- Removed MAIN and LAUNCHER intent filters from here -->
@@ -34,8 +40,9 @@
 
             <!-- Removed MAIN and LAUNCHER intent filters from here -->
         </activity> <!-- This is now the main and launcher activity -->
-        <activity android:name=".StartScreenActivity"
-            android:exported = "true">
+        <activity
+            android:name=".StartScreenActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

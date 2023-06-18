@@ -63,6 +63,8 @@ public class StartScreenActivity extends AppCompatActivity {
 
         Button mini_game_1_button = findViewById(R.id.mini_game_1_button);
         Button mini_game_2_button = findViewById(R.id.mini_game_2_button);
+        Button leaderboard_minigame1_button = findViewById(R.id.leaderboard_minigame1_button);
+        Button leaderboard_minigame2_button = findViewById(R.id.leaderboard_minigame2_button);
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken("259849047586-nccraoagbt3tma1pbp9m1427fv0scu4q.apps.googleusercontent.com")  // your client id here
@@ -96,6 +98,14 @@ public class StartScreenActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(StartScreenActivity.this, MainActivity_minigame2.class);
+                startActivity(intent);
+            }
+        });
+
+        leaderboard_minigame1_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(StartScreenActivity.this, minigame1_leaderboard.class);
                 startActivity(intent);
             }
         });

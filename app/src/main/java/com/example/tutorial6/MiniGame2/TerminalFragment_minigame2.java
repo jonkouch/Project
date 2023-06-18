@@ -51,7 +51,6 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
 
     private Connected connected = Connected.False;
     private boolean initialStart = true;
-    private boolean pendingNewline = false;
     private String newline = TextUtil_minigame2.newline_crlf;
 
 
@@ -60,6 +59,7 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
     boolean timeFlag = true;
     View view;
     float maxAcc = 0;
+    float final_result;
     boolean maxChangeFlag = false;
 
     /*
@@ -202,6 +202,7 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
                 String formattedMaxAcc = String.format("%.2f", maxAcc);
 
                 num_of_steps_predicted.setText("Final top acceleration: " + formattedMaxAcc);
+                final_result = maxAcc;
             }
         }.start();
     }

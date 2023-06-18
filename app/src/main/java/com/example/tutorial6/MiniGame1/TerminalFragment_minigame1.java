@@ -58,7 +58,8 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
     DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
     boolean timeFlag = true;
     View view;
-    float stepNumber= 0;
+    int stepNumber= 0;
+    int final_result;
     boolean maxChangeFlag = false;
 
     /*
@@ -199,6 +200,7 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
                 TextView num_of_steps_predicted = (TextView) view.findViewById(R.id.num_of_steps_predicted);
 
                 num_of_steps_predicted.setText("Final Step Number: " + (int) stepNumber);
+                final_result = stepNumber;
             }
         }.start();
     }

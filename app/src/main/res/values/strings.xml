@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">tutorial6</string>
+    <string name="app_name">Hishguzim</string>
     <string name="devices">Please choose "Game Bluetooth" to continue</string>
 
     <string-array name="activity_options">

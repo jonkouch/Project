@@ -4,11 +4,16 @@ import pandas as pd
 
 samples_array = []
 
-def step_count(sample):
+def max_acc(sample):
     global samples_array
     samples_array.append(sample)
-    num_of_peaks = len(find_peaks(samples_array, height = 12, distance = 5)[0])
-    return num_of_peaks
+    peaks = (find_peaks(samples_array, height = 12, distance = 5)[0])
+
+    np_samples_array = np.array(samples_array)
+
+    top = np.max(np_samples_array[peaks])
+
+    return top
 
 
 

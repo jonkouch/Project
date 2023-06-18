@@ -76,8 +76,6 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
 
     LineChart mpLineChart;
     LineDataSet lineDataSet1;
-    LineDataSet lineDataSet2;
-    LineDataSet lineDataSet3;
     ArrayList<ILineDataSet> dataSets = new ArrayList<>();
     LineData data;
     String activityType;
@@ -89,23 +87,8 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
     DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
     boolean firstReceive = true;
     boolean no_action_flag = true;
-    boolean stopped = false;
     View view;
 
-    float startTime;
-    String directoryPath = "/sdcard/csv_dir/";
-    List<String> filenames = new ArrayList<>();
-    File directory = new File(directoryPath);
-    File[] files = directory.listFiles();
-
-    String row1[];
-    String row2[];
-    String row3[];
-    String row4[];
-    String row5[];
-    String row6[];
-    String row7[];
-    ArrayList<String[]> csv_data;
 
     /*
      * Lifecycle
@@ -198,114 +181,18 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
         View sendBtn = view.findViewById(R.id.send_btn);
         sendBtn.setOnClickListener(v -> send(sendText.getText().toString()));
 
+        chartIndex = 0;
 
 
-        files = directory.listFiles();
-
-        if (files != null) {
-            for (File file : files) {
-                if (file.isFile()) {
-                    if(!filenames.contains(file.getName()))
-                        filenames.add(file.getName());
-                }
-            }
-        }
-
-
-        EditText textButton = view.findViewById(R.id.csv_name);
-        EditText stepsButton = (EditText) view.findViewById(R.id.step_number);
-
-        Button start = view.findViewById(R.id.start_btn);
-
-
-        start.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                directory = new File(directoryPath);
-                files = directory.listFiles();
-                csvName = textButton.getText().toString();
-                stepNumber = stepsButton.getText().toString();
-
-                if(!no_action_flag){
-                    Toast.makeText(service.getApplicationContext(), "You cannot start a recording before saving or deleting the previous one!", Toast.LENGTH_SHORT).show();
-                }
-
-                else if(csvName.matches("") || stepNumber.matches("")) {
-                    Toast.makeText(service.getApplicationContext(), "You need to fill the fields above!", Toast.LENGTH_SHORT).show();
-                }
-
-                else if(filenames.contains(csvName+".csv")){
-                    Toast.makeText(service.getApplicationContext(), "This file name is taken, please choose a different name!", Toast.LENGTH_SHORT).show();
-                }
-                else {
-                    csv_data = new ArrayList<>();
-                    filenames.add(csvName + ".csv");
-                    no_action_flag = false;
-                    firstReceive = true;
-                    stopped = false;
-                    row1 = new String[]{"NAME:", csvName};
-                    row2 = new String[]{"EXPERIMENT TIME:", (String) dtf.format(LocalDateTime.now())};
-                    row3 = new String[]{"ACTIVITY TYPE:", activityType};
-                    row4 = new String[]{"COUNT OF ACTUAL STEPS:", stepNumber};
-                    row6 = new String[]{"Time[sec]", "Acceleration"};
-                    row7 = new String[]{};
-
-                    start_flag = true;
-                    chartIndex = 0;
-                }
-            }
-        });
-
-
-        Button reset = view.findViewById(R.id.reset_btn);
-        reset.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-
-                if(no_action_flag){
-                    Toast.makeText(service.getApplicationContext(), "What are you trying to reset?", Toast.LENGTH_SHORT).show();
-                }
-                else if(!stopped) {
-                    Toast.makeText(service.getApplicationContext(), "Recording must be stopped before resetting", Toast.LENGTH_SHORT).show();
-                }
-                else {
-                    start_flag = false;
-                    stopped = false;
-                    no_action_flag = true;
-                    csv_data.clear();
-                    filenames.remove(csvName+".csv");
-
-                    LineData data = mpLineChart.getData();
-                    ILineDataSet set = data.getDataSetByIndex(0);
-                    data.getDataSetByIndex(0);
-                    while (set.removeLast()) {
-                    }
-                }
-            }
-        });
-
-        Button stop = view.findViewById(R.id.stop_btn);
-        stop.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                if(no_action_flag)
-                    Toast.makeText(service.getApplicationContext(), "What are you trying to stop?", Toast.LENGTH_SHORT).show();
-                else if(stopped){
-                    Toast.makeText(service.getApplicationContext(), "Already stopped", Toast.LENGTH_SHORT).show();
-                }
-                else {
-                    start_flag = false;
-                    stopped = true;
-
-                    if (! Python.isStarted()){
-                        Python.start(new AndroidPlatform(getContext()));
-                    }
-                    Python py = Python.getInstance();
-                    PyObject pyobj = py.getModule("steps");
-
-                    PyObject obj= pyobj.callAttr("reset");
-                    TextView num_of_steps_predicted = (TextView) view.findViewById(R.id.num_of_steps_predicted);
-                    num_of_steps_predicted.setText("number of steps : 0");
-                }
-            }
-        });
+//                    if (! Python.isStarted()){
+//                        Python.start(new AndroidPlatform(getContext()));
+//                    }
+//                    Python py = Python.getInstance();
+//                    PyObject pyobj = py.getModule("steps");
+//
+//                    PyObject obj= pyobj.callAttr("reset");
+//                    TextView num_of_steps_predicted = (TextView) view.findViewById(R.id.num_of_steps_predicted);
+//                    num_of_steps_predicted.setText("number of steps : 0");
 
 
         mpLineChart = (LineChart) view.findViewById(R.id.line_chart);
@@ -318,22 +205,6 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
         data = new LineData(dataSets);
         mpLineChart.setData(data);
         mpLineChart.invalidate();
-
-        Button buttonClear = (Button) view.findViewById(R.id.button1);
-        Button buttonCsvShow = (Button) view.findViewById(R.id.button2);
-
-
-
-
-        buttonClear.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Toast.makeText(getContext(),"Clear",Toast.LENGTH_SHORT).show();
-                LineData data = mpLineChart.getData();
-                ILineDataSet set = data.getDataSetByIndex(0);
-                data.getDataSetByIndex(0);
-                while(set.removeLast()){}
-            }
-        });
 
 
 
@@ -433,71 +304,61 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
     }
 
     private void receive(byte[] message) {
-        if(start_flag) {
-            if (hexEnabled) {
-                receiveText.append(TextUtil_minigame2.toHexString(message) + '\n');
-            } else {
-                String msg = new String(message);
-                if (newline.equals(TextUtil_minigame2.newline_crlf) && msg.length() > 0) {
-                    // don't show CR as ^M if directly before LF
-                    String msg_to_save = msg;
-                    msg_to_save = msg.replace(TextUtil_minigame2.newline_crlf, TextUtil_minigame2.emptyString);
-                    // check message length
-                    if (msg_to_save.length() > 1) {
-                        // split message string by ',' char
-                        String[] parts = msg_to_save.split(",");
-                        // function to trim blank spaces
-                        parts = clean_str(parts);
-                        float N = (float) Math.sqrt(Math.pow(Float.parseFloat(parts[0]), 2) + Math.pow(Float.parseFloat(parts[1]), 2) + Math.pow(Float.parseFloat(parts[2]), 2));
+        if (hexEnabled) {
+            receiveText.append(TextUtil_minigame2.toHexString(message) + '\n');
+        } else {
+            String msg = new String(message);
+            if (newline.equals(TextUtil_minigame2.newline_crlf) && msg.length() > 0) {
+                // don't show CR as ^M if directly before LF
+                String msg_to_save = msg;
+                msg_to_save = msg.replace(TextUtil_minigame2.newline_crlf, TextUtil_minigame2.emptyString);
+                // check message length
+                if (msg_to_save.length() > 1) {
+                    // split message string by ',' char
+                    String[] parts = msg_to_save.split(",");
+                    // function to trim blank spaces
+                    parts = clean_str(parts);
+                    float N = (float) Math.sqrt(Math.pow(Float.parseFloat(parts[0]), 2) + Math.pow(Float.parseFloat(parts[1]), 2) + Math.pow(Float.parseFloat(parts[2]), 2));
 
 
-                        // parse string values, in this case [0] is tmp & [1] is count (t)
-                        String row[];
-                        if (firstReceive){
-                            firstReceive = false;
-                            row = new String[]{"0", parts[0], parts[1], parts[2]};
-                            startTime = (float) (Float.parseFloat(parts[3])/1000.0);
-                        }
-                        else{
-                            row = new String[]{String.valueOf((Float.parseFloat(parts[3])/1000.0-startTime)), parts[0], parts[1], parts[2]};
-                        }
-                        csv_data.add(row);
-
-                        // add received values to line dataset for plotting the linechart
-                        data.addEntry(new Entry(chartIndex, N), 0);
-                        lineDataSet1.notifyDataSetChanged(); // let the data know a dataSet changed
-                        mpLineChart.notifyDataSetChanged(); // let the chart know it's data changed
-                        mpLineChart.invalidate(); // refresh
-                        chartIndex++;
-
-
-                        TextView num_of_steps_predicted = (TextView) view.findViewById(R.id.num_of_steps_predicted);
-
-
-
-                        if (! Python.isStarted()){
-                            Python.start(new AndroidPlatform(getContext()));
-                        }
-                        Python py = Python.getInstance();
-                        PyObject pyobj = py.getModule("steps");
-                        PyObject obj= pyobj.callAttr("step_count", N);
-                        num_of_steps_predicted.setText("Top acceleration hit : " + obj.toString());
-                        estimatedSteps = obj.toString();
-
+                    // parse string values, in this case [0] is tmp & [1] is count (t)
+                    String row[];
+                    if (firstReceive){
+                        firstReceive = false;
                     }
 
-                    msg = msg.replace(TextUtil_minigame2.newline_crlf, TextUtil_minigame2.newline_lf);
-                    // send msg to function that saves it to csv
-                    // special handling if CR and LF come in separate fragments
-                    if (pendingNewline && msg.charAt(0) == '\n') {
-                        Editable edt = receiveText.getEditableText();
-                        if (edt != null && edt.length() > 1)
-                            edt.replace(edt.length() - 2, edt.length(), "");
+                    // add received values to line dataset for plotting the linechart
+                    data.addEntry(new Entry(chartIndex, N), 0);
+                    lineDataSet1.notifyDataSetChanged(); // let the data know a dataSet changed
+                    mpLineChart.notifyDataSetChanged(); // let the chart know it's data changed
+                    mpLineChart.invalidate(); // refresh
+                    chartIndex++;
+
+
+                    TextView num_of_steps_predicted = (TextView) view.findViewById(R.id.num_of_steps_predicted);
+
+                    if (! Python.isStarted()){
+                        Python.start(new AndroidPlatform(getContext()));
                     }
-                    pendingNewline = msg.charAt(msg.length() - 1) == '\r';
+                    Python py = Python.getInstance();
+                    PyObject pyobj = py.getModule("steps");
+                    PyObject obj= pyobj.callAttr("max_acc", N);
+                    num_of_steps_predicted.setText("Top acceleration hit : " + obj.toString());
+                    estimatedSteps = obj.toString();
+
                 }
-                receiveText.append(TextUtil_minigame2.toCaretString(msg, newline.length() != 0));
+
+                msg = msg.replace(TextUtil_minigame2.newline_crlf, TextUtil_minigame2.newline_lf);
+                // send msg to function that saves it to csv
+                // special handling if CR and LF come in separate fragments
+                if (pendingNewline && msg.charAt(0) == '\n') {
+                    Editable edt = receiveText.getEditableText();
+                    if (edt != null && edt.length() > 1)
+                        edt.replace(edt.length() - 2, edt.length(), "");
+                }
+                pendingNewline = msg.charAt(msg.length() - 1) == '\r';
             }
+            receiveText.append(TextUtil_minigame2.toCaretString(msg, newline.length() != 0));
         }
     }
 

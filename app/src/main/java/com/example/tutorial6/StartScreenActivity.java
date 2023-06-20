@@ -86,6 +86,16 @@ public class StartScreenActivity extends AppCompatActivity {
             }
         });
 
+        // Check if a Firebase user is signed in
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser != null) {
+            // User is signed in, show user's stats
+            updateUI(currentUser);
+        } else {
+            // No user is signed in, show sign-in button
+            signInButton.setVisibility(View.VISIBLE);
+        }
+
         mini_game_1_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

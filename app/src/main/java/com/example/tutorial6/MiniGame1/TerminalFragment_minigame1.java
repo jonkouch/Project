@@ -1,6 +1,8 @@
 package com.example.tutorial6.MiniGame1;
 
 import static android.content.ContentValues.TAG;
+
+import com.example.tutorial6.StartScreenActivity;
 import com.example.tutorial6.UsefulFunctions;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -24,6 +26,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -72,6 +75,8 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
     int stepNumber= 0;
     int final_result;
     boolean maxChangeFlag = false;
+
+    private Button homeBtn;
 
     /*
      * Lifecycle
@@ -178,6 +183,7 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
 
         chartIndex = 0;
 
+
         return view;
     }
 
@@ -281,6 +287,16 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
                     // User is signed out
                     Log.d(TAG, "onAuthStateChanged:signed_out");
                 }
+                homeBtn = view.findViewById(R.id.home_btn);
+                homeBtn.setVisibility(View.VISIBLE);
+                homeBtn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(getActivity(), StartScreenActivity.class);
+                        startActivity(intent);
+                    }
+                });
+
             }
         }.start();
     }

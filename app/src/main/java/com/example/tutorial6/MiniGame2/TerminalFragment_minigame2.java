@@ -1,7 +1,8 @@
 package com.example.tutorial6.MiniGame2;
 
+import static android.content.ContentValues.TAG;
+
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
@@ -12,11 +13,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.IBinder;
-import android.text.Editable;
-import android.text.Spannable;
-import android.text.SpannableStringBuilder;
 import android.text.method.ScrollingMovementMethod;
-import android.text.style.ForegroundColorSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,13 +26,18 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
-import com.chaquo.python.PyObject;
-import com.chaquo.python.Python;
-import com.chaquo.python.android.AndroidPlatform;
-
 import com.example.tutorial6.R;
+import com.example.tutorial6.StartScreenActivity;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class TerminalFragment_minigame2 extends Fragment implements ServiceConnection, SerialListener_minigame2 {
@@ -203,6 +206,71 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
 
                 num_of_steps_predicted.setText("Final top acceleration: " + formattedMaxAcc);
                 final_result = maxAcc;
+
+                FirebaseAuth mAuth = FirebaseAuth.getInstance();
+                FirebaseUser currentUser = mAuth.getCurrentUser();
+                FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+                if (currentUser != null) {
+                    // User is signed in
+                    String userId = currentUser.getUid();
+                    String userName = currentUser.getDisplayName();
+                    String userEmail = currentUser.getEmail();
+
+                    Log.d(TAG, "onAuthStateChanged:signed_in:" + userId);
+
+                    // Create a new user score with fields
+                    Map<String, Object> user_score = new HashMap<>();
+                    user_score.put("name", userName);
+                    user_score.put("email", userEmail);
+                    user_score.put("final_score", final_result);
+
+                    // Add a new document to the general scores collection
+                    db.collection("scores_game1").add(user_score)
+                            .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                @Override
+                                public void onSuccess(DocumentReference documentReference) {
+                                    Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
+                                }
+                            })
+                            .addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    Log.w(TAG, "Error adding document", e);
+                                }
+                            });
+
+                    // Add a new document to the user's scores collection
+                    db.collection("users").document(userId).collection("scores_game1").add(user_score)
+                            .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                @Override
+                                public void onSuccess(DocumentReference documentReference) {
+                                    Log.d(TAG, "User's DocumentSnapshot added with ID: " + documentReference.getId());
+                                }
+                            })
+                            .addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    Log.w(TAG, "Error adding document to user's scores", e);
+                                }
+                            });
+
+                } else {
+                    // User is signed out
+                    Log.d(TAG, "onAuthStateChanged:signed_out");
+                }
+                homeBtn = view.findViewById(R.id.home_btn_minigame1);
+                homeBtn.setVisibility(View.VISIBLE);
+                homeBtn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(getActivity(), StartScreenActivity.class);
+                        startActivity(intent);
+                    }
+                });
+
+            }
+        }.start();
             }
         }.start();
     }

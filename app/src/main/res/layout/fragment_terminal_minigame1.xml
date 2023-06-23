@@ -63,7 +63,7 @@
         </LinearLayout>
 
         <Button
-            android:id="@+id/home_btn"
+            android:id="@+id/home_btn_minigame1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:backgroundTint="#7E00BCD4"

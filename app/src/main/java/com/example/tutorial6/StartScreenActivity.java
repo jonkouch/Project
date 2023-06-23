@@ -119,6 +119,14 @@ public class StartScreenActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        leaderboard_minigame2_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(StartScreenActivity.this, minigame2_leaderboard.class);
+                startActivity(intent);
+            }
+        });
     }
 
     private void signIn() {

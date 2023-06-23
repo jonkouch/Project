@@ -3,9 +3,8 @@ package com.example.tutorial6.MiniGame1;
 import static android.content.ContentValues.TAG;
 
 import com.example.tutorial6.StartScreenActivity;
-import com.example.tutorial6.UsefulFunctions;
+
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
@@ -16,7 +15,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.IBinder;
-import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.method.ScrollingMovementMethod;
@@ -287,7 +285,7 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
                     // User is signed out
                     Log.d(TAG, "onAuthStateChanged:signed_out");
                 }
-                homeBtn = view.findViewById(R.id.home_btn);
+                homeBtn = view.findViewById(R.id.home_btn_minigame1);
                 homeBtn.setVisibility(View.VISIBLE);
                 homeBtn.setOnClickListener(new View.OnClickListener() {
                     @Override

@@ -1,11 +1,13 @@
 package com.example.tutorial6;
 
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.tutorial6.R;
@@ -32,11 +34,28 @@ public class LeaderboardAdapter_minigame1 extends RecyclerView.Adapter<Leaderboa
     @Override
     public void onBindViewHolder(@NonNull LeaderboardViewHolder holder, int position) {
         Score score = scoresList.get(position);
-        String displayText = String.format("user: %s, score: %d",
-                score.getName(), score.getFinal_score());
+        String displayText = String.format("user: %s, score: %d, email: %s",
+                score.getName(), score.getFinal_score(), score.getEmail());
         holder.nameTextView.setText(displayText);
-        holder.nameTextView.setTextColor(holder.itemView.getResources().getColor(android.R.color.black));
+
+        // Apply different colors to top 3 results
+        if (position == 0) {
+            holder.nameTextView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.gold));
+            holder.nameTextView.setTextSize(20);
+        } else if (position == 1) {
+            holder.nameTextView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.silver));
+            holder.nameTextView.setTextSize(18);
+        } else if (position == 2) {
+            holder.nameTextView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.bronze));
+            holder.nameTextView.setTextSize(16);
+        } else {
+            holder.nameTextView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.defaultColor));
+            holder.nameTextView.setTextSize(14);
+        }
+
+        holder.nameTextView.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), android.R.color.black));
     }
+
 
     @Override
     public int getItemCount() {

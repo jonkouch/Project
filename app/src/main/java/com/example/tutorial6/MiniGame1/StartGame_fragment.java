@@ -85,10 +85,17 @@ public class StartGame_fragment extends Fragment {
     }
 
     private void launchTerminalFragment() {
-        // Replace the current fragment with TerminalFragment_minigame1
-        Bundle args = getArguments();
-        Fragment fragment = new TerminalFragment_minigame1();
-        fragment.setArguments(args);
-        getFragmentManager().beginTransaction().replace(R.id.fragment, fragment, "terminal").addToBackStack(null).commit();
+        // Check if the Fragment is still attached to its activity.
+        if (isAdded() && getFragmentManager() != null) {
+            // Replace the current fragment with TerminalFragment_minigame1
+            Bundle args = getArguments();
+            Fragment fragment = null;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                fragment = new TerminalFragment_minigame1();
+            }
+            fragment.setArguments(args);
+            getFragmentManager().beginTransaction().replace(R.id.fragment, fragment, "terminal").addToBackStack(null).commit();
+        }
     }
+
 }

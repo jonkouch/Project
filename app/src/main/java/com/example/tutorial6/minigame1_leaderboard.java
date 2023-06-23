@@ -28,8 +28,9 @@ public class minigame1_leaderboard extends AppCompatActivity {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         RecyclerView recyclerView = findViewById(R.id.recycler_view_minigame1);
 
-        db.collection("scores")
+        db.collection("scores_game1")
                 .orderBy("final_score", Query.Direction.DESCENDING)
+                .limit(10)
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override

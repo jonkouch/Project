@@ -3,6 +3,7 @@ package com.example.tutorial6.MiniGame2;
 import static android.content.ContentValues.TAG;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
@@ -13,18 +14,27 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.IBinder;
+import android.text.Editable;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
 import android.text.method.ScrollingMovementMethod;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
+
+import com.chaquo.python.PyObject;
+import com.chaquo.python.Python;
+import com.chaquo.python.android.AndroidPlatform;
 
 import com.example.tutorial6.R;
 import com.example.tutorial6.StartScreenActivity;
@@ -64,6 +74,9 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
     float maxAcc = 0;
     float final_result;
     boolean maxChangeFlag = false;
+
+    private Button homeBtn;
+
 
     /*
      * Lifecycle
@@ -226,7 +239,7 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
                     user_score.put("final_score", final_result);
 
                     // Add a new document to the general scores collection
-                    db.collection("scores_game1").add(user_score)
+                    db.collection("scores_game2").add(user_score)
                             .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                                 @Override
                                 public void onSuccess(DocumentReference documentReference) {
@@ -241,7 +254,7 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
                             });
 
                     // Add a new document to the user's scores collection
-                    db.collection("users").document(userId).collection("scores_game1").add(user_score)
+                    db.collection("users").document(userId).collection("scores_game2").add(user_score)
                             .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                                 @Override
                                 public void onSuccess(DocumentReference documentReference) {
@@ -259,7 +272,7 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
                     // User is signed out
                     Log.d(TAG, "onAuthStateChanged:signed_out");
                 }
-                homeBtn = view.findViewById(R.id.home_btn_minigame1);
+                homeBtn = view.findViewById(R.id.home_btn_minigame2);
                 homeBtn.setVisibility(View.VISIBLE);
                 homeBtn.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -271,8 +284,7 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
 
             }
         }.start();
-            }
-        }.start();
+
     }
 
     private void receive(byte[] message) {

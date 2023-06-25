@@ -2,8 +2,9 @@ package com.example.tutorial6.MiniGame2;
 
 import static android.content.ContentValues.TAG;
 
+import com.example.tutorial6.StartScreenActivity;
+
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
@@ -14,7 +15,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.IBinder;
-import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.method.ScrollingMovementMethod;
@@ -37,7 +37,6 @@ import com.chaquo.python.Python;
 import com.chaquo.python.android.AndroidPlatform;
 
 import com.example.tutorial6.R;
-import com.example.tutorial6.StartScreenActivity;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -71,12 +70,13 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
     DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
     boolean timeFlag = true;
     View view;
-    float maxAcc = 0;
+    float maxAcc= 0;
     float final_result;
     boolean maxChangeFlag = false;
 
     private Button homeBtn;
 
+    boolean sendToFirebase = true;
 
     /*
      * Lifecycle
@@ -87,6 +87,22 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
         setHasOptionsMenu(true);
         setRetainInstance(true);
         deviceAddress = getArguments().getString("device");
+
+        FirebaseAuth.AuthStateListener mAuthListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser current_user = firebaseAuth.getCurrentUser();
+                if (current_user != null) {
+                    // User is signed in
+                    Log.d(TAG, "onAuthStateChanged:signed_in:" + current_user.getUid());
+                } else {
+                    // User is signed out
+                    Log.d(TAG, "onAuthStateChanged:signed_out");
+                }
+                // ...
+            }
+
+        };
     }
 
     @Override
@@ -167,6 +183,7 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
 
         chartIndex = 0;
 
+
         return view;
     }
 
@@ -213,79 +230,80 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
             @Override
             public void onFinish() {
                 timeFlag = false;
-                TextView num_of_steps_predicted = (TextView) view.findViewById(R.id.num_of_steps_predicted);
+                TextView num_of_steps_predicted = (TextView) view.findViewById(R.id.top_acceleration);
 
-                String formattedMaxAcc = String.format("%.2f", maxAcc);
-
-                num_of_steps_predicted.setText("Final top acceleration: " + formattedMaxAcc);
+                num_of_steps_predicted.setText("Your Top Acceleration was: " + String.format("%.2f", maxAcc));
                 final_result = maxAcc;
 
-                FirebaseAuth mAuth = FirebaseAuth.getInstance();
-                FirebaseUser currentUser = mAuth.getCurrentUser();
-                FirebaseFirestore db = FirebaseFirestore.getInstance();
+                if (sendToFirebase) {
+                    sendToFirebase = false;
+                    FirebaseAuth mAuth = FirebaseAuth.getInstance();
+                    FirebaseUser currentUser = mAuth.getCurrentUser();
+                    FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-                if (currentUser != null) {
-                    // User is signed in
-                    String userId = currentUser.getUid();
-                    String userName = currentUser.getDisplayName();
-                    String userEmail = currentUser.getEmail();
+                    if (currentUser != null) {
+                        // User is signed in
+                        String userId = currentUser.getUid();
+                        String userName = currentUser.getDisplayName();
+                        String userEmail = currentUser.getEmail();
 
-                    Log.d(TAG, "onAuthStateChanged:signed_in:" + userId);
+                        Log.d(TAG, "onAuthStateChanged:signed_in:" + userId);
 
-                    // Create a new user score with fields
-                    Map<String, Object> user_score = new HashMap<>();
-                    user_score.put("name", userName);
-                    user_score.put("email", userEmail);
-                    user_score.put("final_score", final_result);
+                        // Create a new user score with fields
+                        Map<String, Object> user_score = new HashMap<>();
+                        user_score.put("name", userName);
+                        user_score.put("email", userEmail);
+                        user_score.put("final_score", final_result);
 
-                    // Add a new document to the general scores collection
-                    db.collection("scores_game2").add(user_score)
-                            .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                                @Override
-                                public void onSuccess(DocumentReference documentReference) {
-                                    Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
-                                }
-                            })
-                            .addOnFailureListener(new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception e) {
-                                    Log.w(TAG, "Error adding document", e);
-                                }
-                            });
+                        // Add a new document to the general scores collection
+                        db.collection("scores_game2").add(user_score)
+                                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                    @Override
+                                    public void onSuccess(DocumentReference documentReference) {
+                                        Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Log.w(TAG, "Error adding document", e);
+                                    }
+                                });
 
-                    // Add a new document to the user's scores collection
-                    db.collection("users").document(userId).collection("scores_game2").add(user_score)
-                            .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                                @Override
-                                public void onSuccess(DocumentReference documentReference) {
-                                    Log.d(TAG, "User's DocumentSnapshot added with ID: " + documentReference.getId());
-                                }
-                            })
-                            .addOnFailureListener(new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception e) {
-                                    Log.w(TAG, "Error adding document to user's scores", e);
-                                }
-                            });
+                        // Add a new document to the user's scores collection
+                        db.collection("users").document(userId).collection("scores_game2").add(user_score)
+                                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                    @Override
+                                    public void onSuccess(DocumentReference documentReference) {
+                                        Log.d(TAG, "User's DocumentSnapshot added with ID: " + documentReference.getId());
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Log.w(TAG, "Error adding document to user's scores", e);
+                                    }
+                                });
 
-                } else {
-                    // User is signed out
-                    Log.d(TAG, "onAuthStateChanged:signed_out");
-                }
-                homeBtn = view.findViewById(R.id.home_btn_minigame2);
-                homeBtn.setVisibility(View.VISIBLE);
-                homeBtn.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Intent intent = new Intent(getActivity(), StartScreenActivity.class);
-                        startActivity(intent);
+                    } else {
+                        // User is signed out
+                        Log.d(TAG, "onAuthStateChanged:signed_out");
                     }
-                });
+                    homeBtn = view.findViewById(R.id.home_btn_minigame2);
+                    homeBtn.setVisibility(View.VISIBLE);
+                    homeBtn.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Intent intent = new Intent(getActivity(), StartScreenActivity.class);
+                            startActivity(intent);
+                        }
+                    });
 
-            }
-        }.start();
-
+                }
+            }}.start();
     }
+
+
 
     private void receive(byte[] message) {
         if (timeFlag) {
@@ -303,7 +321,7 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
                     float N = (float) Math.sqrt(Math.pow(Float.parseFloat(parts[0]), 2) + Math.pow(Float.parseFloat(parts[1]), 2));
 
 
-                    TextView num_of_steps_predicted = (TextView) view.findViewById(R.id.num_of_steps_predicted);
+                    TextView num_of_steps_predicted = (TextView) view.findViewById(R.id.top_acceleration);
 
                     if (!Python.isStarted()) {
                         Python.start(new AndroidPlatform(getContext()));
@@ -313,7 +331,7 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
                     PyObject obj = pyobj.callAttr("max_acc", N);
                     if (Float.parseFloat(obj.toString()) > 0)
                         startCountdown();
-                    num_of_steps_predicted.setText("Top acceleration hit : " + obj.toString());
+                    num_of_steps_predicted.setText("max acceleration : " + obj.toString());
 
                     float acc = Float.parseFloat(obj.toString());
                     if(acc>maxAcc) {
@@ -324,13 +342,13 @@ public class TerminalFragment_minigame2 extends Fragment implements ServiceConne
                         maxChangeFlag = false;
 
                     if(maxChangeFlag){
-                        if(maxAcc<4){
+                        if(maxAcc<10){
 
                         }
-                        else if(maxAcc<8){
+                        else if(maxAcc<20){
 
                         }
-                        else if(maxAcc<15){
+                        else if(maxAcc<30){
 
                         }
                         else{

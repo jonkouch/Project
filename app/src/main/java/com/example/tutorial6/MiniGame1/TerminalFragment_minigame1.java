@@ -76,6 +76,8 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
 
     private Button homeBtn;
 
+    boolean sendToFirebase = true;
+
     /*
      * Lifecycle
      */
@@ -233,69 +235,72 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
                 num_of_steps_predicted.setText("Final Step Number: " + (int) stepNumber);
                 final_result = stepNumber;
 
-                FirebaseAuth mAuth = FirebaseAuth.getInstance();
-                FirebaseUser currentUser = mAuth.getCurrentUser();
-                FirebaseFirestore db = FirebaseFirestore.getInstance();
+                if (sendToFirebase) {
+                    sendToFirebase = false;
 
-                if (currentUser != null) {
-                    // User is signed in
-                    String userId = currentUser.getUid();
-                    String userName = currentUser.getDisplayName();
-                    String userEmail = currentUser.getEmail();
+                    FirebaseAuth mAuth = FirebaseAuth.getInstance();
+                    FirebaseUser currentUser = mAuth.getCurrentUser();
+                    FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-                    Log.d(TAG, "onAuthStateChanged:signed_in:" + userId);
+                    if (currentUser != null) {
+                        // User is signed in
+                        String userId = currentUser.getUid();
+                        String userName = currentUser.getDisplayName();
+                        String userEmail = currentUser.getEmail();
 
-                    // Create a new user score with fields
-                    Map<String, Object> user_score = new HashMap<>();
-                    user_score.put("name", userName);
-                    user_score.put("email", userEmail);
-                    user_score.put("final_score", final_result);
+                        Log.d(TAG, "onAuthStateChanged:signed_in:" + userId);
 
-                    // Add a new document to the general scores collection
-                    db.collection("scores_game1").add(user_score)
-                            .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                                @Override
-                                public void onSuccess(DocumentReference documentReference) {
-                                    Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
-                                }
-                            })
-                            .addOnFailureListener(new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception e) {
-                                    Log.w(TAG, "Error adding document", e);
-                                }
-                            });
+                        // Create a new user score with fields
+                        Map<String, Object> user_score = new HashMap<>();
+                        user_score.put("name", userName);
+                        user_score.put("email", userEmail);
+                        user_score.put("final_score", final_result);
 
-                    // Add a new document to the user's scores collection
-                    db.collection("users").document(userId).collection("scores_game1").add(user_score)
-                            .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                                @Override
-                                public void onSuccess(DocumentReference documentReference) {
-                                    Log.d(TAG, "User's DocumentSnapshot added with ID: " + documentReference.getId());
-                                }
-                            })
-                            .addOnFailureListener(new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception e) {
-                                    Log.w(TAG, "Error adding document to user's scores", e);
-                                }
-                            });
+                        // Add a new document to the general scores collection
+                        db.collection("scores_game1").add(user_score)
+                                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                    @Override
+                                    public void onSuccess(DocumentReference documentReference) {
+                                        Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Log.w(TAG, "Error adding document", e);
+                                    }
+                                });
 
-                } else {
-                    // User is signed out
-                    Log.d(TAG, "onAuthStateChanged:signed_out");
-                }
-                homeBtn = view.findViewById(R.id.home_btn_minigame1);
-                homeBtn.setVisibility(View.VISIBLE);
-                homeBtn.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Intent intent = new Intent(getActivity(), StartScreenActivity.class);
-                        startActivity(intent);
+                        // Add a new document to the user's scores collection
+                        db.collection("users").document(userId).collection("scores_game1").add(user_score)
+                                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                    @Override
+                                    public void onSuccess(DocumentReference documentReference) {
+                                        Log.d(TAG, "User's DocumentSnapshot added with ID: " + documentReference.getId());
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Log.w(TAG, "Error adding document to user's scores", e);
+                                    }
+                                });
+
+                    } else {
+                        // User is signed out
+                        Log.d(TAG, "onAuthStateChanged:signed_out");
                     }
-                });
+                    homeBtn = view.findViewById(R.id.home_btn_minigame1);
+                    homeBtn.setVisibility(View.VISIBLE);
+                    homeBtn.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Intent intent = new Intent(getActivity(), StartScreenActivity.class);
+                            startActivity(intent);
+                        }
+                    });
 
-            }
+                }}
         }.start();
     }
 

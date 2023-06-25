@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/run_in_place">
+    android:background="@drawable/sprint">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -72,6 +72,7 @@
             android:textSize="20sp"
             android:textStyle="bold"
             android:visibility="invisible" />
+
 
         <LinearLayout
             android:layout_width="match_parent"

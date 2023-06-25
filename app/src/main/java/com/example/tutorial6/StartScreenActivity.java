@@ -9,6 +9,7 @@ import android.content.Intent;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -20,6 +21,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.common.api.ApiException;
 import android.util.Log;
@@ -30,6 +32,10 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QuerySnapshot;
 
 public class StartScreenActivity extends AppCompatActivity {
 
@@ -180,42 +186,80 @@ public class StartScreenActivity extends AppCompatActivity {
 
 
     private void updateUI(Object account) {
+        String userId, name, email;
+
+        // Hide the sign-in button
+        SignInButton signInButton = findViewById(R.id.sign_in_button);
+        signInButton.setVisibility(View.GONE);
+
         if (account instanceof GoogleSignInAccount) {
             // Get GoogleSignInAccount from the parameter
             GoogleSignInAccount googleAccount = (GoogleSignInAccount) account;
-            String name = googleAccount.getDisplayName();
-            String email = googleAccount.getEmail();
-            SignInButton signInButton = findViewById(R.id.sign_in_button);
-            signInButton.setVisibility(View.GONE);  // Hide the sign-in button
-            // Call your method to get the user score
-            UsefulFunctions.getUserScore(googleAccount.getId(), new FirestoreCallback() {
-                @Override
-                public void onCallback(int score) {
-                    String userInfo = "User: " + name + "\nEmail: " + email + "\nScore: " + score;
-                    TextView userMailScore = findViewById(R.id.user_info);
-                    userMailScore.setText(userInfo);
-                    userMailScore.setVisibility(View.VISIBLE);  // Show the TextView
-                }
-            });
-        }
-        else if (account instanceof FirebaseUser) {
-            // Get FirebaseUser from the parameter
+            userId = googleAccount.getId();
+            name = googleAccount.getDisplayName();
+            email = googleAccount.getEmail();
+        } else if (account instanceof FirebaseUser) {
+            // Handle FirebaseUser
             FirebaseUser firebaseUser = (FirebaseUser) account;
-            String name = firebaseUser.getDisplayName();
-            String email = firebaseUser.getEmail();
-            SignInButton signInButton = findViewById(R.id.sign_in_button);
-            signInButton.setVisibility(View.GONE);  // Hide the sign-in button
-            // Call your method to get the user score
-            UsefulFunctions.getUserScore(firebaseUser.getUid(), new FirestoreCallback() {
-                @Override
-                public void onCallback(int score) {
-                    String userInfo = "User: " + name + "\nEmail: " + email + "\nScore: " + score;
-                    TextView userMailScore = findViewById(R.id.user_info);
-                    userMailScore.setText(userInfo);
-                    userMailScore.setVisibility(View.VISIBLE);  // Show the TextView
-                }
-            });
+            userId = firebaseUser.getUid();
+            name = firebaseUser.getDisplayName();
+            email = firebaseUser.getEmail();
+        } else {
+            // If account is neither GoogleSignInAccount nor FirebaseUser, do nothing
+            return;
         }
+
+        // Fetch and Display Best Scores
+        fetchAndDisplayBestScores(userId, name, email);
+    }
+
+
+    private void fetchAndDisplayBestScores(String userId, String name, String email) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        // Display user email in the personal details card
+        TextView userEmail = findViewById(R.id.tv_user_email);
+        userEmail.setText("Email: " + email);
+
+        // Display user name in the personal details card
+        TextView userName = findViewById(R.id.tv_user_name);
+        userName.setText("Name: " + name);
+
+        // TextViews for the best scores
+        TextView bestScoreGame1 = findViewById(R.id.tv_best_score_game1);
+        TextView bestScoreGame2 = findViewById(R.id.tv_best_score_game2);
+
+        // Fetching best score for game 1
+        db.collection("users").document(userId).collection("scores_game1")
+                .orderBy("final_score", Query.Direction.DESCENDING).limit(1)
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                        String bestScoreGame1Text = "N/A";
+                        if (!queryDocumentSnapshots.isEmpty()) {
+                            DocumentSnapshot documentSnapshot = queryDocumentSnapshots.getDocuments().get(0);
+                            bestScoreGame1Text = "Best Score Game 1: " + documentSnapshot.getDouble("final_score");
+                        }
+                        bestScoreGame1.setText(bestScoreGame1Text);
+                    }
+                });
+
+        // Fetching best score for game 2
+        db.collection("users").document(userId).collection("scores_game2")
+                .orderBy("final_score", Query.Direction.DESCENDING).limit(1)
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                        String bestScoreGame2Text = "N/A";
+                        if (!queryDocumentSnapshots.isEmpty()) {
+                            DocumentSnapshot documentSnapshot = queryDocumentSnapshots.getDocuments().get(0);
+                            bestScoreGame2Text = "Best Score Game 2: " + documentSnapshot.getDouble("final_score");
+                        }
+                        bestScoreGame2.setText(bestScoreGame2Text);
+                    }
+                });
     }
 
 

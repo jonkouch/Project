@@ -7,7 +7,7 @@ samples_array = []
 def max_acc(sample):
     global samples_array
     samples_array.append(sample)
-    peaks = (find_peaks(samples_array, height = 5, distance = 5)[0])
+    peaks = (find_peaks(samples_array, height = 3, distance = 3)[0])
 
     np_samples_array = np.array(samples_array)
 
@@ -20,7 +20,7 @@ def max_acc(sample):
 def step_number(sample):
     global samples_array
     samples_array.append(sample)
-    num_of_peaks = len(find_peaks(samples_array, height = 12, distance = 5)[0])
+    num_of_peaks = 2*len(find_peaks(samples_array, height = 12, distance = 4)[0])
     return num_of_peaks
 
 

@@ -14,6 +14,7 @@ import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
 import android.os.IBinder;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
@@ -64,13 +65,17 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
     private Connected connected = Connected.False;
     private boolean initialStart = true;
     private String newline = TextUtil_minigame1.newline_crlf;
+    private int lastValue = -1;
+
+    private Handler handler = new Handler();
+    private Runnable runnable;
 
 
     int chartIndex;
     DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
     boolean timeFlag = true;
     View view;
-    int stepNumber= 0;
+    int stepNumber = 0;
     int final_result;
     boolean maxChangeFlag = false;
 
@@ -300,10 +305,10 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
                         }
                     });
 
-                }}
+                }
+            }
         }.start();
     }
-
 
 
     private void receive(byte[] message) {
@@ -319,7 +324,7 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
                     String[] parts = msg_to_save.split(",");
                     // function to trim blank spaces
                     parts = clean_str(parts);
-                    float N = (float) Math.sqrt(Math.pow(Float.parseFloat(parts[0]), 2) + Math.pow(Float.parseFloat(parts[1]), 2)+ Math.pow(Float.parseFloat(parts[2]), 2));
+                    float N = (float) Math.sqrt(Math.pow(Float.parseFloat(parts[0]), 2) + Math.pow(Float.parseFloat(parts[1]), 2) + Math.pow(Float.parseFloat(parts[2]), 2));
 
 
                     TextView num_of_steps_predicted = (TextView) view.findViewById(R.id.num_of_steps_predicted);
@@ -332,27 +337,47 @@ public class TerminalFragment_minigame1 extends Fragment implements ServiceConne
                     PyObject obj = pyobj.callAttr("step_number", N);
                     if (Float.parseFloat(obj.toString()) > 0)
                         startCountdown();
-                    num_of_steps_predicted.setText("STEPS!!  : " + obj.toString());
+
+                    // Inside your method
+                    Integer currentVal = Integer.parseInt(obj.toString());
+                    Integer stp = currentVal-1;
+                    Integer stp2 = currentVal;
+
+                    // If currentVal is different from lastValue, update the TextView and schedule the second update
+                    if(!currentVal.equals(lastValue)){
+                        lastValue = currentVal;
+
+                        if(stp.intValue() > 0)
+                            num_of_steps_predicted.setText("STEPS!!  : " + stp);
+
+                        // Create a new runnable task for updating to stp2
+                        Runnable runnable = new Runnable() {
+                            @Override
+                            public void run() {
+                                num_of_steps_predicted.setText("STEPS!!  : " + stp2);
+                            }
+                        };
+
+                        // Delay the update to stp2
+                        handler.postDelayed(runnable, 340); // delay of 300ms (0.3 seconds)
+                    }
+
 
                     int steps = Integer.parseInt(obj.toString());
-                    if(steps>stepNumber) {
+                    if (steps > stepNumber) {
                         stepNumber = steps;
                         maxChangeFlag = true;
-                    }
-                    else
+                    } else
                         maxChangeFlag = false;
 
-                    if(maxChangeFlag){
-                        if(stepNumber<10){
+                    if (maxChangeFlag) {
+                        if (stepNumber < 10) {
 
-                        }
-                        else if(stepNumber<20){
+                        } else if (stepNumber < 20) {
 
-                        }
-                        else if(stepNumber<30){
+                        } else if (stepNumber < 30) {
 
-                        }
-                        else{
+                        } else {
 
                         }
                     }

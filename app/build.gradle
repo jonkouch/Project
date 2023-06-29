@@ -1,5 +1,5 @@
 plugins {
-    id 'com.android.application'
+;;;    id 'com.android.application'
     id 'com.google.gms.google-services'
     id 'com.chaquo.python'
 }
@@ -21,7 +21,7 @@ android {
         }
 
         python {
-            buildPython "C:/Users/gurgu/AppData/Local/Microsoft/WindowsApps/python.exe"
+            buildPython "C:/Users/jonat/anaconda3/envs/ultimate/python.exe"
             pip {
                 install "numpy"
                 install "scipy"
